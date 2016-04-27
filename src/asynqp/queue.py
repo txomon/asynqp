@@ -70,10 +70,11 @@ class Queue(object):
         if self.deleted:
             raise Deleted("Queue {} was deleted".format(self.name))
 
-        self.sender.send_QueueBind(self.name, exchange.name, routing_key, arguments or {})
-        yield from self.synchroniser.await(spec.QueueBindOK)
+        if exchange.name:
+            self.sender.send_QueueBind(self.name, exchange.name, routing_key, arguments or {})
+            yield from self.synchroniser.await(spec.QueueBindOK)
+            self.reader.ready()
         b = QueueBinding(self.reader, self.sender, self.synchroniser, self, exchange, routing_key)
-        self.reader.ready()
         return b
 
     @asyncio.coroutine
