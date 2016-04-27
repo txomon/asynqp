@@ -81,6 +81,16 @@ class WhenBindingAQueueToAnExchange(QueueContext, ExchangeContext):
         self.server.should_have_received_method(self.channel.id, expected_method)
 
 
+class WhenBindingAQueueToTheDefaultExchange(QueueContext, ExchangeContext):
+    def when_I_bind_the_queue(self):
+        self.exchange = self.make_exchange('')
+        self.async_partial(self.queue.bind(self.exchange, 'routing.key', arguments={'x-ignore': ''}))
+
+    def it_should_not_send_QueueBind(self):
+        expected_method = spec.QueueBind(0, self.queue.name, self.exchange.name, 'routing.key', False, {'x-ignore': ''})
+        self.server.should_not_have_received_method(self.channel.id, expected_method)
+
+
 class WhenQueueBindOKArrives(QueueContext, ExchangeContext):
     def given_I_sent_QueueBind(self):
         self.task = asyncio.async(self.queue.bind(self.exchange, 'routing.key'))
